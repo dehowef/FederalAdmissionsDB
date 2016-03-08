@@ -9,7 +9,14 @@ try:
 except:
 	print "Connection Unsuccessful"
 
+with (open('PERV2PUB.CSV')) as f:
+	reader = csv.reader(f)
+	row = reader.next()
+	
+	sql = "CREATE TABLE PERV2 \n(\n" 
+	for value in row[:-1]:
+		sql += value + ' INT, \n'
+	sql += row[-1] + ' INT\n); '
 
-
-
+print sql
 conn.close()
