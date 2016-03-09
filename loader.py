@@ -1,3 +1,8 @@
+#Authors: Cindy Chao, Dehowe Feng
+# ECS 165A Homework 4
+#Loads values into postgresql
+#Python Version: 2.7.1
+
 import os
 import psycopg2
 import csv
@@ -27,16 +32,16 @@ def buildNTHS(filename):
 		print "Error, what are you trying to read??"
 		sys.exit()
 
+	print "Creating table", tablename, "from", filename, "..."
+
 	with (open(filename)) as f:
 		reader = csv.reader(f)
 		row = reader.next()
-#create table		
 		sql = "CREATE TABLE IF NOT EXISTS " + tablename + "\n(\n" 
 		for value in row[:-1]:
 			sql += value + ' FLOAT(8), \n'
 		sql += row[-1] + ' FLOAT(8)\n); '
 		sql = str(sql)
-		#print sql
 		cur.execute(sql)
 	loadNTHS(tablename, filename) #end buildNTHS
 
@@ -56,7 +61,8 @@ def buildEIA(filename):
 		print "Error, what are you trying to read??"
 		sys.exit()
 
-#create table
+	print "Creating table", tablename, "from", filename, "..."
+
 	with (open(filename)) as f:
 		reader = csv.reader(f)
 		row = reader.next()
@@ -75,12 +81,12 @@ def buildEIA(filename):
 ###########################
 #load table function
 def loadNTHS(tablename, filename):
-	print "Now loading table " + tablename
+	print "Now loading table ", tablename, "..."
 	with (open(filename, "rb")) as f:
 		reader = csv.reader(f)
 		row = reader.next()
 		x = 1
-		insertcount = 1;
+		insertcount = 1
 		for row in reader:
 			if(x == 1):
 				sql = "INSERT INTO " + tablename + " VALUES "
@@ -104,21 +110,16 @@ def loadNTHS(tablename, filename):
 			if(x == 1000):
 				sql += "\n ;"
 				sql = str(sql) #need a cast.
-				#print "value of x is ", x
-				#execute here.
 				cur.execute(sql)
 				sql = "" 
-				#print "Insertion"
 				x = 1
 				continue
 			x += 1
 		if sql != "": 
 			sql = str(sql)[:-3]
-			insertcount += 1
 			lastinsert = "INSERT INTO " + tablename + " VALUES " + sql + " ;" 
 			cur.execute(sql)
-			print "final value of x is ", x
-			print "insertions:", insertcount
+			print  insertcount, "insertions made."
 			#insert here.
 
 
@@ -126,11 +127,12 @@ def loadNTHS(tablename, filename):
 #   Loads  EIA  table     #
 ###########################
 def loadEIA(tablename, filename):
-	print "Now loading table " + tablename
+	print "Now loading table ", tablename, "..."
 	with (open(filename, "rb")) as f:
 		reader = csv.reader(f)
 		row = reader.next()
 		x = 1
+		insertcount = 1
 		for row in reader:
 			if(x == 1):
 				sql = "INSERT INTO " + tablename + " VALUES "
@@ -141,17 +143,15 @@ def loadEIA(tablename, filename):
 				
 			sql += "\'" + row[-1] + "\')"
 			
+			insertcount += 1
 			if(x != 1000):
 				sql += ", \n"
 
 			if(x == 1000):
 				sql += "\n ;"
 				sql = str(sql) #need a cast.
-				#print "value of x is ", x
-				#execute here.
 				cur.execute(sql)
 				sql = "" 
-				#print "Insertion"
 				x = 1
 				continue
 			x += 1
@@ -160,13 +160,7 @@ def loadEIA(tablename, filename):
 			sql = str(sql)[:-3]
 			lastinsert = "INSERT INTO " + tablename + " VALUES " + sql + " ;" 
 			cur.execute(sql)
-			print "Final Insertion"
-			print "final value of x is ", x
-			#insert here.
-
-
-
-
+			print insertcount, "insertions made."
 
 #open connection
 try:
