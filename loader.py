@@ -10,6 +10,9 @@ def isREAL(txt):
 	except  ValueError:
 		return False
 
+###########################
+#   Builds NTHS table     #
+###########################
 def buildNTHS(filename):
 	
 	if 'PER' in filename:
@@ -30,20 +33,56 @@ def buildNTHS(filename):
 #create table		
 		sql = "CREATE TABLE IF NOT EXISTS " + tablename + "\n(\n" 
 		for value in row[:-1]:
-			sql += value + ' FLOAT, \n'
-		sql += row[-1] + ' FLOAT\n); '
+			sql += value + ' FLOAT(8), \n'
+		sql += row[-1] + ' FLOAT(8)\n); '
 		sql = str(sql)
-		print sql
+		#print sql
+		cur.execute(sql)
+	loadNTHS(tablename, filename) #end buildNTHS
+
+
+###########################
+#   Builds EIA  table     #
+###########################
+def buildEIA(filename):
+
+	if 'Electricity' in filename:
+		tablename = 'ELECTRICITY'
+	elif 'Transportation' in filename:
+		tablename = 'TRANSPORTATION'
+	elif 'MkWh' in filename:
+		tablename = 'MKWH'
+	else:
+		print "Error, what are you trying to read??"
+		sys.exit()
+
+#create table
+	with (open(filename)) as f:
+		reader = csv.reader(f)
+		row = reader.next()
+		
+		sql = "CREATE TABLE IF NOT EXISTS " + tablename + "\n(\n" 
+		for value in row[:-1]:
+			sql += value + ' VARCHAR(100), \n'
+		sql += row[-1] + ' VARCHAR(100)\n); '
+		sql = str(sql)
 		cur.execute(sql)
 
-#load table
+	loadEIA(tablename, filename) #end buildEIA
+
+###########################
+#   Loads  NTHS table     #
+###########################
+#load table function
+def loadNTHS(tablename, filename):
 	print "Now loading table " + tablename
 	with (open(filename, "rb")) as f:
 		reader = csv.reader(f)
 		row = reader.next()
-		x = 0
+		x = 1
+		insertcount = 1;
 		for row in reader:
-			if(x == 0):
+			if(x == 1):
 				sql = "INSERT INTO " + tablename + " VALUES "
 			sql += "(" + row[0] + ', '
 
@@ -58,6 +97,7 @@ def buildNTHS(filename):
 			else:
 				sql += "66666" + ")"
 			
+			insertcount += 1	
 			if(x != 1000):
 				sql += ", \n"
 
@@ -68,8 +108,51 @@ def buildNTHS(filename):
 				#execute here.
 				cur.execute(sql)
 				sql = "" 
-				print "Insertion"
-				x = 0
+				#print "Insertion"
+				x = 1
+				continue
+			x += 1
+		if sql != "": 
+			sql = str(sql)[:-3]
+			insertcount += 1
+			lastinsert = "INSERT INTO " + tablename + " VALUES " + sql + " ;" 
+			cur.execute(sql)
+			print "final value of x is ", x
+			print "insertions:", insertcount
+			#insert here.
+
+
+###########################
+#   Loads  EIA  table     #
+###########################
+def loadEIA(tablename, filename):
+	print "Now loading table " + tablename
+	with (open(filename, "rb")) as f:
+		reader = csv.reader(f)
+		row = reader.next()
+		x = 1
+		for row in reader:
+			if(x == 1):
+				sql = "INSERT INTO " + tablename + " VALUES "
+			sql += "(\'" + row[0] + '\', '
+
+			for value in row[1:-1]:
+				sql += '\'' + value + '\', '
+				
+			sql += "\'" + row[-1] + "\')"
+			
+			if(x != 1000):
+				sql += ", \n"
+
+			if(x == 1000):
+				sql += "\n ;"
+				sql = str(sql) #need a cast.
+				#print "value of x is ", x
+				#execute here.
+				cur.execute(sql)
+				sql = "" 
+				#print "Insertion"
+				x = 1
 				continue
 			x += 1
 
@@ -77,33 +160,13 @@ def buildNTHS(filename):
 			sql = str(sql)[:-3]
 			lastinsert = "INSERT INTO " + tablename + " VALUES " + sql + " ;" 
 			cur.execute(sql)
+			print "Final Insertion"
 			print "final value of x is ", x
 			#insert here.
 
-def buildEIA(filename):
 
-	if 'Electricity' in filename:
-		tablename = 'ELECTRICITY'
-	elif 'VEH' in filename:
-		tablename = 'TRANSPORTATION'
-	elif 'MkWh' in filename:
-		tablename = 'MKWH'
-	else:
-		print "Error, what are you trying to read??"
-		sys.exit()
 
-#create table
-	with (open(filename)) as f:
-		reader = csv.reader(f)
-		row = reader.next()
-		
-		sql = "CREATE TABLE IF NOT EXISTS" + tablename + "\n(\n" 
-		for value in row[:-1]:
-			sql += value + ' VARCHAR(100), \n'
-		sql += row[-1] + ' VARCHAR(100)\n); '
-		#print sql
 
-#load table
 
 #open connection
 try:
@@ -114,10 +177,13 @@ try:
 except:
 	print "Connection Unsuccessful"
 
-
 buildNTHS("PERV2PUB.CSV")
-#buildNTHS("VEHV2PUB.CSV")
-#buildEIA("EIA_CO2_Electricity_2015.csv")
-# buildEIA("ERROR.CSV")
+buildNTHS("VEHV2PUB.CSV")
+buildNTHS("DAYV2PUB.CSV")
+buildNTHS("HHV2PUB.CSV")
+buildEIA("EIA_CO2_Electricity_2015.csv")
+buildEIA("EIA_CO2_Transportation_2015.csv")
+buildEIA("EIA_MkWh_2015.csv")
+conn.commit()
 cur.close()
 conn.close()
