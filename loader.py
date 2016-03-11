@@ -116,8 +116,7 @@ def loadNTHS(tablename, filename):
 				continue
 			x += 1
 		if sql != "": 
-			sql = str(sql)[:-3]
-			lastinsert = "INSERT INTO " + tablename + " VALUES " + sql + " ;" 
+			sql = str(sql)[:-3] + "\n;"
 			cur.execute(sql)
 			print  insertcount, "insertions made."
 			#insert here.
@@ -157,8 +156,7 @@ def loadEIA(tablename, filename):
 			x += 1
 
 		if sql != "": 
-			sql = str(sql)[:-3]
-			lastinsert = "INSERT INTO " + tablename + " VALUES " + sql + " ;" 
+			sql = str(sql)[:-3] + ";"
 			cur.execute(sql)
 			print insertcount, "insertions made."
 
