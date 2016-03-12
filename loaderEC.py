@@ -123,7 +123,8 @@ def buildEIA(groupname):
 	for row in range(0, rowcount):
 
 		if(x == 1):
-			sql = "INSERT INTO " + tablename + " VALUES "
+			
+			sql = "BEGIN TRANSACTION INSERT INTO " + tablename + " VALUES "
 	
 		count = 0	
 		for col in group:
@@ -140,7 +141,7 @@ def buildEIA(groupname):
 			sql += ", \n"
 
 		if(x == 1000):
-			sql += "\n ;"
+			sql += "\n ; END TRANSACTION"
 			sql = str(sql)
 			cur.execute(sql)
 			print insertcount, "insertions made."
